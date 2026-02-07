@@ -25,7 +25,7 @@ export default function TooltipView({ payload, label, active }: any) {
           {`Symbol: ${data.symbol}`}
         </p>
         <p className="text-black" style={{ margin: "0" }}>
-          {`Symbol Name: ${data.beta_2_and_10}`}
+          {`Symbol Name: ${data.signal_name}`}
         </p>
         <p className="text-black" style={{ margin: "0" }}>
           {`Entry Price: ${data.entry_price}`}
