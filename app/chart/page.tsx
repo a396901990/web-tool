@@ -34,6 +34,7 @@ type LineGroup = {
 
 export default function ChartPage() {
   const [selectedSignal, setSelectedSignal] = useState<string>("all");
+  const [hasFilter, setHasFilter] = useState(false);
   const rows = useMemo<Trade[]>(() => (trades as Trade[][]).flat(), []);
   const dateBounds = useMemo(() => {
     let min: number | null = null;
@@ -85,7 +86,14 @@ export default function ChartPage() {
     });
   }, [rows]);
 
-  const colorForIndex = (index: number) => `hsl(${(index * 47) % 360} 70% 45%)`;
+  const colorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    lineGroups.forEach((group) => {
+      const hue = Math.floor(Math.random() * 360);
+      map.set(group.label, `hsl(${hue} 70% 45%)`);
+    });
+    return map;
+  }, [lineGroups]);
 
   const dateFilteredGroups = useMemo(() => {
     const selection = range[0];
@@ -111,8 +119,9 @@ export default function ChartPage() {
     [dateFilteredGroups],
   );
 
-  const filteredGroups =
-    selectedSignal === "all"
+  const filteredGroups = !hasFilter
+    ? []
+    : selectedSignal === "all"
       ? dateFilteredGroups
       : dateFilteredGroups.filter((group) => group.label === selectedSignal);
 
@@ -130,7 +139,10 @@ export default function ChartPage() {
             ranges={range}
             onChange={(item: {
               selection: { startDate: Date; endDate: Date; key: string };
-            }) => setRange([item.selection])}
+            }) => {
+              setRange([item.selection]);
+              setHasFilter(true);
+            }}
             moveRangeOnFirstSelection={false}
             editableDateInputs
           />
@@ -139,7 +151,10 @@ export default function ChartPage() {
           Signal
           <select
             value={selectedSignal}
-            onChange={(event) => setSelectedSignal(event.target.value)}
+            onChange={(event) => {
+              setSelectedSignal(event.target.value);
+              setHasFilter(true);
+            }}
             className="ml-2 px-3 py-1 rounded border border-gray-300 bg-white text-black text-sm"
           >
             {signalNames.map((name) => (
@@ -159,13 +174,13 @@ export default function ChartPage() {
         responsive
       >
         <CartesianGrid stroke="#aaa" strokeDasharray="5 5" />
-        {filteredGroups.map((group, index) => (
+        {filteredGroups.map((group) => (
           <Line
             key={group.label}
             data={group.data}
             type="monotone"
             dataKey="pnl"
-            stroke={colorForIndex(index)}
+            stroke={colorMap.get(group.label) ?? "#444"}
             strokeWidth={2}
             name={group.label}
           />
