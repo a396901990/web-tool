@@ -42,6 +42,9 @@ export default function TooltipView({ payload, label, active }: any) {
         <p className="text-black" style={{ margin: "0" }}>
           {`Pnl Percent: ${data.pnl_percent}`}
         </p>
+        <p className="text-black" style={{ margin: "0" }}>
+          {`NAV: ${data.NAV}`}
+        </p>
       </div>
     );
   }

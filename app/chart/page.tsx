@@ -29,10 +29,11 @@ type LineGroup = {
   signalName: string;
   symbol: string;
   label: string;
-  data: Array<Trade & { fill_time_label: string; pnl: number }>;
+  data: Array<Trade & { fill_time_label: string; NAV: number }>;
 };
 
 export default function ChartPage() {
+  const chargeRate = 0.05;
   const [selectedSignal, setSelectedSignal] = useState<string>("all");
   const [hasFilter, setHasFilter] = useState(false);
   const rows = useMemo<Trade[]>(() => (trades as Trade[][]).flat(), []);
@@ -73,15 +74,22 @@ export default function ChartPage() {
         (a, b) =>
           new Date(a.fill_time).getTime() - new Date(b.fill_time).getTime(),
       );
+      let prevNAV = 1;
       return {
         signalName,
         symbol,
         label: `${signalName} · ${symbol}`,
-        data: sorted.map((item) => ({
-          ...item,
-          fill_time_label: new Date(item.fill_time).toLocaleDateString(),
-          pnl: Math.round(item.pnl),
-        })),
+        data: sorted.map((item) => {
+          const nav =
+            prevNAV *
+            (1 + ((item.pnl_percent ?? 0) * 0.01));
+          prevNAV = nav;
+          return {
+            ...item,
+            fill_time_label: new Date(item.fill_time).toLocaleDateString(),
+            NAV: nav,
+          };
+        }),
       };
     });
   }, [rows]);
@@ -179,7 +187,7 @@ export default function ChartPage() {
             key={group.label}
             data={group.data}
             type="monotone"
-            dataKey="pnl"
+            dataKey="NAV"
             stroke={colorMap.get(group.label) ?? "#444"}
             strokeWidth={2}
             name={group.label}
@@ -188,7 +196,7 @@ export default function ChartPage() {
         <XAxis dataKey="fill_time_label" />
         <YAxis
           width="auto"
-          label={{ value: "PNL", position: "insideLeft", angle: -90 }}
+          label={{ value: "NAV", position: "insideLeft", angle: -90 }}
         />
         {/* <Legend align="right" /> */}
         <Tooltip content={TooltipView} />
